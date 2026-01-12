@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "CMakeFiles\\Arcraven_UGV_Core.dir\\utils\\Logger.cpp.obj",
+            "outputs": [
+                "C:\\Users\\EH02\\Documents\\Arcraven.UGV.Core\\cmake-build-debug\\vc140.pdb",
+                "CMakeFiles\\Arcraven_UGV_Core.dir\\utils\\Logger.cpp.obj.ddi"
+            ],
+            "requires": []
+        }
+    ]
+}

@@ -1,0 +1,17 @@
+# ninja log v6
+24	384	7897176094266434	CMakeFiles/Arcraven_UGV_Core.dir/models/enums/CommandAuthority.cpp.obj	6687bdc60eea65bf
+37	378	7897176094407102	CMakeFiles/Arcraven_UGV_Core.dir/models/enums/RejectReason.cpp.obj	27751c32828e0c6e
+18	385	7897176094216395	CMakeFiles/Arcraven_UGV_Core.dir/models/enums/CommandPriority.cpp.obj	c24638feae6a4f9d
+493	2975	7898843618722008	CMakeFiles/Arcraven_UGV_Core.dir/main.cpp.obj	d66bf3a8daa52217
+7	387	7897176094101171	CMakeFiles/Arcraven_UGV_Core.dir/models/enums/CommandDomain.cpp.obj	d0395e2965832b88
+12	391	7897176094151204	CMakeFiles/Arcraven_UGV_Core.dir/models/enums/UgvCommand.cpp.obj	ff0c1964db8da929
+31	401	7897176094341790	CMakeFiles/Arcraven_UGV_Core.dir/models/enums/CommandStatus.cpp.obj	37760f81aca69c4e
+2975	3216	7898843643549159	Arcraven_UGV_Core.exe	7f3da7066b01d253
+2	165	7898852731963455	build.ninja	4b8eade9a3941549
+326	2660	7898820558201572	CMakeFiles/Arcraven_UGV_Core.dir/utils/Logger.cpp.obj	bf960f027571882f
+16	450	7898843613955567	CMakeFiles/Arcraven_UGV_Core.dir/main.cpp.obj.ddi	f81066c6c2987677
+10	244	7898820555025721	CMakeFiles/Arcraven_UGV_Core.dir/utils/Logger.cpp.obj.ddi	a9eef56de8b80809
+2	43	7898848770439529	CMakeFiles/Arcraven_UGV_Core.dir/CXX.dd	acd34c9b330682c2
+2	43	7898848770439529	C:/Users/EH02/Documents/Arcraven.UGV.Core/cmake-build-debug/CMakeFiles/Arcraven_UGV_Core.dir/CXXModules.json	acd34c9b330682c2
+450	491	7898843618299969	CMakeFiles/Arcraven_UGV_Core.dir/main.cpp.obj.modmap	c56f05e50962ec1a
+2	43	7898848770439529	CMakeFiles/Arcraven_UGV_Core.dir/utils/Logger.cpp.obj.modmap	acd34c9b330682c2

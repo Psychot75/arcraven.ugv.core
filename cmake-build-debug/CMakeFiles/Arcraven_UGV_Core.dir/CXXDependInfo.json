@@ -1,0 +1,18 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "MSVC",
+	"compiler-id" : "MSVC",
+	"compiler-simulate-id" : "",
+	"config" : "Debug",
+	"cxx-modules" : {},
+	"dir-cur-bld" : "C:/Users/EH02/Documents/Arcraven.UGV.Core/cmake-build-debug",
+	"dir-cur-src" : "C:/Users/EH02/Documents/Arcraven.UGV.Core",
+	"dir-top-bld" : "C:/Users/EH02/Documents/Arcraven.UGV.Core/cmake-build-debug",
+	"dir-top-src" : "C:/Users/EH02/Documents/Arcraven.UGV.Core",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : [],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "C:/Users/EH02/Documents/Arcraven.UGV.Core/cmake-build-debug/CMakeFiles/Arcraven_UGV_Core.dir"
+}
