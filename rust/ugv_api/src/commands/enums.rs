@@ -1,0 +1,93 @@
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandStatus {
+    None,
+    Received,
+    Accepted,
+    Succeeded,
+    Rejected,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RejectReason {
+    None,
+    InvalidPayload,
+    Busy,
+    Unsupported,
+    StaleCommand,
+    SafetyLockout,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandPriority {
+    Low,
+    Normal,
+    High,
+    Critical,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandAuthority {
+    Unknown,
+    Operator,
+    Autonomy,
+    RemoteSupervisor,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CommandDomain {
+    Mobility,
+    Mission,
+    Sensors,
+    System,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UgvCommand {
+    FollowPath = 100,
+    GoTo = 101,
+    Stop = 102,
+    HoldPosition = 103,
+    Anchor = 104,
+    ReplanTo = 105,
+    Loiter = 106,
+    ReturnToBase = 107,
+    FollowTarget = 108,
+    Evade = 109,
+    Dock = 110,
+    SetSpeedLimit = 200,
+    SetStance = 201,
+    AlignHeading = 202,
+    FaceTarget = 203,
+    Stabilize = 204,
+    ScanArea = 300,
+    Observe = 301,
+    FocusSensor = 302,
+    TrackEntity = 303,
+    CalibrateSensors = 304,
+    Sentinel = 400,
+    SecureArea = 401,
+    Escort = 402,
+    Checkpoint = 403,
+    Investigate = 404,
+    Shadow = 405,
+    ExecuteMission = 500,
+    AbortMission = 501,
+    PauseMission = 502,
+    ResumeMission = 503,
+    Wait = 504,
+    HandoffControl = 505,
+    Signal = 600,
+    Broadcast = 601,
+    Acknowledge = 602,
+    RequestAssistance = 603,
+    EmergencyStop = 700,
+    SafeMode = 701,
+    SelfCheck = 702,
+    Recover = 703,
+    Shutdown = 704,
+    Reboot = 705,
+    SetRuleset = 800,
+    SetOwnership = 801,
+    LockCommandSet = 802,
+    UnlockCommandSet = 803,
+}
