@@ -20,4 +20,4 @@ struct UgvConfig {
     Rate estop_rate{std::chrono::microseconds(2000)};      // 500 Hz
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

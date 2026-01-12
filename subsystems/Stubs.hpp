@@ -33,6 +33,11 @@ public:
         ARC_LOG_FATAL("DriveSystem: ESTOP (stub) -> outputs disabled");
     }
 
+    bool read_joint_states(std::vector<JointState>& out) override {
+        (void)out;
+        return false;
+    }
+
     bool enabled() const { return enabled_.load(std::memory_order_acquire); }
 
 private:
@@ -50,6 +55,11 @@ public:
     void poll() override {
         // TODO: read sensors; publish into shared memory/blackboard
     }
+
+    bool read_frame(SensorFrame& out) override {
+        (void)out;
+        return false;
+    }
 };
 
 class CommandLinkStub final : public ICommandLink {
@@ -63,4 +73,4 @@ public:
     bool pump_tx() override { return false; }
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv
