@@ -1,6 +1,20 @@
 #pragma once
 
+#include <cstdint>
+#include <string>
+#include <vector>
+
 namespace arcraven::ugv {
+
+struct SensorChannel {
+    std::string name;
+    std::vector<double> values;
+};
+
+struct SensorFrame {
+    uint64_t timestamp_ns = 0;
+    std::vector<SensorChannel> channels;
+};
 
 class IDriveSystem {
 public:
@@ -16,6 +30,7 @@ public:
     virtual ~ISensorSuite() = default;
     virtual bool init() = 0;
     virtual void poll() = 0; // non-blocking poll of sensor updates
+    virtual bool read_frame(SensorFrame& out) = 0;
 };
 
 class ICommandLink {
@@ -26,4 +41,4 @@ public:
     virtual bool pump_tx() = 0;
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

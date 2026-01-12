@@ -7,6 +7,7 @@
 #include "core/EStopLatch.hpp"
 #include "core/StateStore.hpp"
 #include "core/StopController.hpp"
+#include "subsystems/Iceoryx2Bridge.hpp"
 #include "subsystems/Stubs.hpp"
 
 namespace arcraven::ugv {
@@ -23,6 +24,7 @@ private:
     void load_state();
     bool calibration_sequence();
     bool start_runtime();
+    void start_estop_thread();
     void safe_shutdown();
 
     // ---- Command integration ----
@@ -47,11 +49,12 @@ private:
     // Replace stubs with real subsystems.
     DriveSystemStub drives_;
     SensorSuiteStub sensors_;
-    CommandLinkStub cmd_link_;
+    Iceoryx2Bridge cmd_link_;
 
     CommandRouter cmd_router_;
 
     std::vector<std::thread> threads_;
+    bool estop_thread_started_ = false;
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

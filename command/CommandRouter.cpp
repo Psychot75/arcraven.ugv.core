@@ -77,4 +77,4 @@ size_t CommandRouter::queued() const {
     return q_.size();
 }
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

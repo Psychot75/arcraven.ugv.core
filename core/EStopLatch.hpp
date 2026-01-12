@@ -36,4 +36,4 @@ private:
     std::optional<std::string> reason_;
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

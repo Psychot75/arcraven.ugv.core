@@ -79,4 +79,4 @@ bool StateStore::save(const PersistentStateV1& s) {
     return !ec;
 }
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

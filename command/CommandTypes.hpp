@@ -40,4 +40,4 @@ inline bool is_expired(const CommandEnvelope& c, uint64_t now_ns) {
     return (now_ns - c.issued_ns) > c.ttl_ns;
 }
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv
