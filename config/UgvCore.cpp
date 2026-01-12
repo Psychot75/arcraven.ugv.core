@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <string>
+#include <string_view>
 
 #include "utils/Logger.hpp"
 
@@ -13,6 +14,7 @@ UgvCore::UgvCore(UgvConfig cfg)
       drives_(cfg_.expected_drives),
       cmd_router_(CommandRouterConfig{.max_queue = 256}) {
     cmd_link_.attach_router(&cmd_router_);
+    cmd_link_.configure_paths(cfg_.data_dir / "bridge");
 }
 
 int UgvCore::run() {
@@ -221,6 +223,18 @@ void UgvCore::register_default_command_handlers() {
             return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "CalibrateSensors accepted (stub)"};
         });
 
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::Signal,
+        [](const CommandEnvelope& c) -> CommandResult {
+            // Basic flashlight control payload format:
+            // "flashlight|<id>|<state>"
+            // state: 1 = on, 0 = off
+            std::string_view payload(c.payload_json);
+            if (payload.rfind("flashlight|", 0) == 0) {
+                return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "flashlight command accepted"};
+            }
+            return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "Signal accepted (stub)"};
+        });
+
     const auto register_stub = [this](arcraven::ugv::UgvCommand cmd, std::string label) {
         cmd_router_.register_handler(cmd,
             [label = std::move(label)](const CommandEnvelope& c) -> CommandResult {
@@ -258,7 +272,6 @@ void UgvCore::register_default_command_handlers() {
     register_stub(arcraven::ugv::UgvCommand::PauseMission, "PauseMission");
     register_stub(arcraven::ugv::UgvCommand::ResumeMission, "ResumeMission");
     register_stub(arcraven::ugv::UgvCommand::HandoffControl, "HandoffControl");
-    register_stub(arcraven::ugv::UgvCommand::Signal, "Signal");
     register_stub(arcraven::ugv::UgvCommand::Broadcast, "Broadcast");
     register_stub(arcraven::ugv::UgvCommand::Acknowledge, "Acknowledge");
     register_stub(arcraven::ugv::UgvCommand::RequestAssistance, "RequestAssistance");
@@ -305,6 +318,7 @@ void UgvCore::control_thread() {
                     }
                     ARC_LOG_INFO("Cmd processed: id=" + std::to_string(cmd.command_id) +
                                  " status=" + std::to_string(static_cast<int>(res.status)));
+                    (void)cmd_link_.publish_command_result(cmd.command_id, res);
                 });
 
             // TODO: compute control outputs based on latest accepted commands
@@ -321,12 +335,23 @@ void UgvCore::sensor_thread() {
     ARC_LOG_INFO("Sensor thread started");
     auto next = SteadyClock::now();
     SensorFrame frame{};
+    std::vector<JointState> joints;
 
     while (!stop_.stop_requested()) {
         sensors_.poll();
-        if (sensors_.read_frame(frame)) {
-            (void)cmd_link_.publish_sensor_frame(frame);
+        frame.timestamp_ns = now_ns();
+        const bool has_frame = sensors_.read_frame(frame);
+        const bool has_joints = drives_.read_joint_states(joints);
+
+        if (!has_frame) {
+            frame.ids.clear();
+            frame.types.clear();
+            frame.payloads.clear();
         }
+        if (!has_joints) {
+            joints.clear();
+        }
+        (void)cmd_link_.publish_telemetry(frame, joints);
         sleep_until_next(next, cfg_.sensor_rate);
     }
 

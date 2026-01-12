@@ -6,14 +6,19 @@
 
 namespace arcraven::ugv {
 
-struct SensorChannel {
-    std::string name;
-    std::vector<double> values;
-};
-
 struct SensorFrame {
     uint64_t timestamp_ns = 0;
-    std::vector<SensorChannel> channels;
+    std::vector<std::string> ids;
+    std::vector<std::string> types;
+    std::vector<std::string> payloads;
+};
+
+struct JointState {
+    std::string id;
+    std::string name;
+    double position = 0.0;
+    double velocity = 0.0;
+    double load = 0.0;
 };
 
 class IDriveSystem {
@@ -23,6 +28,7 @@ public:
     virtual bool enable() = 0;
     virtual void disable() = 0;
     virtual void estop() = 0;
+    virtual bool read_joint_states(std::vector<JointState>& out) = 0;
 };
 
 class ISensorSuite {

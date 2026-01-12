@@ -33,6 +33,11 @@ public:
         ARC_LOG_FATAL("DriveSystem: ESTOP (stub) -> outputs disabled");
     }
 
+    bool read_joint_states(std::vector<JointState>& out) override {
+        (void)out;
+        return false;
+    }
+
     bool enabled() const { return enabled_.load(std::memory_order_acquire); }
 
 private:

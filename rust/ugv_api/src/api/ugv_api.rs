@@ -1,5 +1,6 @@
-use crate::commands::{CommandEnvelope, CommandResult};
-use crate::sensors::{SensorDescriptor, SensorFrame};
+use crate::commands::{CommandEnvelope, CommandResultEvent};
+use crate::sensors::SensorDescriptor;
+use crate::telemetry::TelemetryFrame;
 use crate::transport::Transport;
 
 pub struct UgvApi<T: Transport> {
@@ -23,15 +24,15 @@ impl<T: Transport> UgvApi<T> {
         &self.sensors
     }
 
-    pub fn publish_sensor_frame(&mut self, frame: SensorFrame) -> bool {
-        self.transport.publish_sensor_frame(frame)
+    pub fn send_command(&mut self, command: CommandEnvelope) -> bool {
+        self.transport.send_command(command)
     }
 
-    pub fn poll_commands(&mut self) -> Vec<CommandEnvelope> {
-        self.transport.receive_commands()
+    pub fn poll_telemetry(&mut self) -> Vec<TelemetryFrame> {
+        self.transport.receive_telemetry()
     }
 
-    pub fn publish_command_result(&mut self, command_id: u64, result: CommandResult) -> bool {
-        self.transport.publish_command_result(command_id, result)
+    pub fn poll_command_results(&mut self) -> Vec<CommandResultEvent> {
+        self.transport.receive_command_results()
     }
 }
