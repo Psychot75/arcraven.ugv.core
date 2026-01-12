@@ -50,6 +50,11 @@ public:
     void poll() override {
         // TODO: read sensors; publish into shared memory/blackboard
     }
+
+    bool read_frame(SensorFrame& out) override {
+        (void)out;
+        return false;
+    }
 };
 
 class CommandLinkStub final : public ICommandLink {
@@ -63,4 +68,4 @@ public:
     bool pump_tx() override { return false; }
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

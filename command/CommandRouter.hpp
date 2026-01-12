@@ -57,4 +57,4 @@ private:
     std::unordered_map<uint16_t, CommandHandler> handlers_;
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

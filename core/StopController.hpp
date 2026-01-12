@@ -28,4 +28,4 @@ private:
     std::condition_variable cv_;
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

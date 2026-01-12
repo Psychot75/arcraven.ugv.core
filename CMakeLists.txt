@@ -19,4 +19,5 @@ add_executable(Arcraven_UGV_Core
         core/StateStore.cpp
         config/UgvCore.hpp
         command/CommandRouter.cpp
+        subsystems/Iceoryx2Bridge.cpp
 )
