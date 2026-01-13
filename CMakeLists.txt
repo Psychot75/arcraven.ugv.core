@@ -13,10 +13,18 @@ add_executable(Arcraven_UGV_Core
 
         utils/Logger.hpp
         utils/Logger.cpp
+        utils/Base64.hpp
+        utils/Base64.cpp
 
         main.cpp
 
         core/StateStore.cpp
         config/UgvCore.hpp
         command/CommandRouter.cpp
+        subsystems/Iceoryx2Bridge.cpp
+)
+
+target_include_directories(Arcraven_UGV_Core
+        PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
 )

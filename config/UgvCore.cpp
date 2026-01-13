@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <string>
+#include <string_view>
 
 #include "utils/Logger.hpp"
 
@@ -11,7 +12,10 @@ UgvCore::UgvCore(UgvConfig cfg)
     : cfg_(std::move(cfg)),
       state_store_(cfg_.data_dir / "state.bin"),
       drives_(cfg_.expected_drives),
-      cmd_router_(CommandRouterConfig{.max_queue = 256}) {}
+      cmd_router_(CommandRouterConfig{.max_queue = 256}) {
+    cmd_link_.attach_router(&cmd_router_);
+    cmd_link_.configure_paths(cfg_.data_dir / "bridge");
+}
 
 int UgvCore::run() {
     ARC_LOG_INFO("ArcUGV core boot sequence start");
@@ -20,6 +24,8 @@ int UgvCore::run() {
         ARC_LOG_FATAL("Hardware bring-up failed");
         return 2;
     }
+
+    start_estop_thread();
 
     load_state();
 
@@ -98,13 +104,18 @@ bool UgvCore::start_runtime() {
         return false;
     }
 
-    threads_.emplace_back(&UgvCore::estop_thread, this);
     threads_.emplace_back(&UgvCore::control_thread, this);
     threads_.emplace_back(&UgvCore::sensor_thread, this);
     threads_.emplace_back(&UgvCore::io_thread, this);
     threads_.emplace_back(&UgvCore::persist_thread, this);
 
     return true;
+}
+
+void UgvCore::start_estop_thread() {
+    if (estop_thread_started_) return;
+    estop_thread_started_ = true;
+    threads_.emplace_back(&UgvCore::estop_thread, this);
 }
 
 void UgvCore::safe_shutdown() {
@@ -141,6 +152,7 @@ void UgvCore::register_default_command_handlers() {
         [this](const CommandEnvelope& c) -> CommandResult {
             (void)c;
             estop_.trigger("EmergencyStop command");
+            stop_.request_stop();
             return {arcraven::ugv::CommandStatus::Succeeded, arcraven::ugv::RejectReason::None, "estop latched"};
         });
 
@@ -151,13 +163,123 @@ void UgvCore::register_default_command_handlers() {
             return {arcraven::ugv::CommandStatus::Succeeded, arcraven::ugv::RejectReason::None, "shutdown requested"};
         });
 
-    // Default stub handler registration example for a mobility command.
-    // Replace these lambdas with real implementations later.
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::Stop,
+        [this](const CommandEnvelope& c) -> CommandResult {
+            (void)c;
+            if (estop_.latched()) {
+                return {arcraven::ugv::CommandStatus::Rejected, arcraven::ugv::RejectReason::SafetyLockout, "estop latched"};
+            }
+            drives_.disable();
+            return {arcraven::ugv::CommandStatus::Succeeded, arcraven::ugv::RejectReason::None, "drives disabled"};
+        });
+
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::Wait,
+        [](const CommandEnvelope& c) -> CommandResult {
+            (void)c;
+            // TODO: implement wait/idle behavior.
+            return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "wait accepted (stub)"};
+        });
+
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::Reboot,
+        [this](const CommandEnvelope& c) -> CommandResult {
+            (void)c;
+            // TODO: integrate platform reboot sequence.
+            request_stop();
+            return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "reboot requested (stub)"};
+        });
+
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::FollowPath,
+        [](const CommandEnvelope& c) -> CommandResult {
+            (void)c;
+            // TODO: implement follow path behavior.
+            return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "FollowPath accepted (stub)"};
+        });
+
     cmd_router_.register_handler(arcraven::ugv::UgvCommand::GoTo,
         [](const CommandEnvelope& c) -> CommandResult {
             (void)c;
+            // TODO: implement goto behavior.
             return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "GoTo accepted (stub)"};
         });
+
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::SafeMode,
+        [](const CommandEnvelope& c) -> CommandResult {
+            (void)c;
+            // TODO: implement safe mode behavior.
+            return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "SafeMode accepted (stub)"};
+        });
+
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::SelfCheck,
+        [](const CommandEnvelope& c) -> CommandResult {
+            (void)c;
+            // TODO: implement self check behavior.
+            return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "SelfCheck accepted (stub)"};
+        });
+
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::CalibrateSensors,
+        [](const CommandEnvelope& c) -> CommandResult {
+            (void)c;
+            // TODO: implement sensor calibration behavior.
+            return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "CalibrateSensors accepted (stub)"};
+        });
+
+    cmd_router_.register_handler(arcraven::ugv::UgvCommand::Signal,
+        [](const CommandEnvelope& c) -> CommandResult {
+            // Basic flashlight control payload format:
+            // "flashlight|<id>|<state>"
+            // state: 1 = on, 0 = off
+            std::string_view payload(c.payload_json);
+            if (payload.rfind("flashlight|", 0) == 0) {
+                return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "flashlight command accepted"};
+            }
+            return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, "Signal accepted (stub)"};
+        });
+
+    const auto register_stub = [this](arcraven::ugv::UgvCommand cmd, std::string label) {
+        cmd_router_.register_handler(cmd,
+            [label = std::move(label)](const CommandEnvelope& c) -> CommandResult {
+                (void)c;
+                // TODO: implement command handling.
+                return {arcraven::ugv::CommandStatus::Accepted, arcraven::ugv::RejectReason::None, label + " accepted (stub)"};
+            });
+    };
+
+    register_stub(arcraven::ugv::UgvCommand::HoldPosition, "HoldPosition");
+    register_stub(arcraven::ugv::UgvCommand::Anchor, "Anchor");
+    register_stub(arcraven::ugv::UgvCommand::ReplanTo, "ReplanTo");
+    register_stub(arcraven::ugv::UgvCommand::Loiter, "Loiter");
+    register_stub(arcraven::ugv::UgvCommand::ReturnToBase, "ReturnToBase");
+    register_stub(arcraven::ugv::UgvCommand::FollowTarget, "FollowTarget");
+    register_stub(arcraven::ugv::UgvCommand::Evade, "Evade");
+    register_stub(arcraven::ugv::UgvCommand::Dock, "Dock");
+    register_stub(arcraven::ugv::UgvCommand::SetSpeedLimit, "SetSpeedLimit");
+    register_stub(arcraven::ugv::UgvCommand::SetStance, "SetStance");
+    register_stub(arcraven::ugv::UgvCommand::AlignHeading, "AlignHeading");
+    register_stub(arcraven::ugv::UgvCommand::FaceTarget, "FaceTarget");
+    register_stub(arcraven::ugv::UgvCommand::Stabilize, "Stabilize");
+    register_stub(arcraven::ugv::UgvCommand::ScanArea, "ScanArea");
+    register_stub(arcraven::ugv::UgvCommand::Observe, "Observe");
+    register_stub(arcraven::ugv::UgvCommand::FocusSensor, "FocusSensor");
+    register_stub(arcraven::ugv::UgvCommand::TrackEntity, "TrackEntity");
+    register_stub(arcraven::ugv::UgvCommand::Sentinel, "Sentinel");
+    register_stub(arcraven::ugv::UgvCommand::SecureArea, "SecureArea");
+    register_stub(arcraven::ugv::UgvCommand::Escort, "Escort");
+    register_stub(arcraven::ugv::UgvCommand::Checkpoint, "Checkpoint");
+    register_stub(arcraven::ugv::UgvCommand::Investigate, "Investigate");
+    register_stub(arcraven::ugv::UgvCommand::Shadow, "Shadow");
+    register_stub(arcraven::ugv::UgvCommand::ExecuteMission, "ExecuteMission");
+    register_stub(arcraven::ugv::UgvCommand::AbortMission, "AbortMission");
+    register_stub(arcraven::ugv::UgvCommand::PauseMission, "PauseMission");
+    register_stub(arcraven::ugv::UgvCommand::ResumeMission, "ResumeMission");
+    register_stub(arcraven::ugv::UgvCommand::HandoffControl, "HandoffControl");
+    register_stub(arcraven::ugv::UgvCommand::Broadcast, "Broadcast");
+    register_stub(arcraven::ugv::UgvCommand::Acknowledge, "Acknowledge");
+    register_stub(arcraven::ugv::UgvCommand::RequestAssistance, "RequestAssistance");
+    register_stub(arcraven::ugv::UgvCommand::Recover, "Recover");
+    register_stub(arcraven::ugv::UgvCommand::SetRuleset, "SetRuleset");
+    register_stub(arcraven::ugv::UgvCommand::SetOwnership, "SetOwnership");
+    register_stub(arcraven::ugv::UgvCommand::LockCommandSet, "LockCommandSet");
+    register_stub(arcraven::ugv::UgvCommand::UnlockCommandSet, "UnlockCommandSet");
 }
 
 void UgvCore::estop_thread() {
@@ -167,6 +289,7 @@ void UgvCore::estop_thread() {
     while (!stop_.stop_requested()) {
         if (estop_.latched()) {
             drives_.estop();
+            stop_.request_stop();
         }
 
         sleep_until_next(next, cfg_.estop_rate);
@@ -185,13 +308,17 @@ void UgvCore::control_thread() {
         if (!estop_.latched()) {
             // Command processing can be done here to keep "control owns actuation".
             cmd_router_.process_some(now_ns(), /*max_n=*/8,
-                [](const std::pair<CommandEnvelope, CommandResult>& processed) {
+                [this](const std::pair<CommandEnvelope, CommandResult>& processed) {
                     // In real code, forward ACK to cmd_link_ tx queue.
                     // For now, just log a minimal trail.
                     const auto& cmd = processed.first;
                     const auto& res = processed.second;
+                    if (res.status != arcraven::ugv::CommandStatus::Rejected) {
+                        state_.last_authority = static_cast<uint8_t>(cmd.authority);
+                    }
                     ARC_LOG_INFO("Cmd processed: id=" + std::to_string(cmd.command_id) +
                                  " status=" + std::to_string(static_cast<int>(res.status)));
+                    (void)cmd_link_.publish_command_result(cmd.command_id, res);
                 });
 
             // TODO: compute control outputs based on latest accepted commands
@@ -207,9 +334,24 @@ void UgvCore::control_thread() {
 void UgvCore::sensor_thread() {
     ARC_LOG_INFO("Sensor thread started");
     auto next = SteadyClock::now();
+    SensorFrame frame{};
+    std::vector<JointState> joints;
 
     while (!stop_.stop_requested()) {
         sensors_.poll();
+        frame.timestamp_ns = now_ns();
+        const bool has_frame = sensors_.read_frame(frame);
+        const bool has_joints = drives_.read_joint_states(joints);
+
+        if (!has_frame) {
+            frame.ids.clear();
+            frame.types.clear();
+            frame.payloads.clear();
+        }
+        if (!has_joints) {
+            joints.clear();
+        }
+        (void)cmd_link_.publish_telemetry(frame, joints);
         sleep_until_next(next, cfg_.sensor_rate);
     }
 
@@ -246,4 +388,4 @@ void UgvCore::persist_thread() {
     ARC_LOG_INFO("Persist thread exiting");
 }
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

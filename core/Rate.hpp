@@ -16,4 +16,4 @@ inline void sleep_until_next(SteadyClock::time_point& next, const Rate& r) {
     std::this_thread::sleep_until(next);
 }
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

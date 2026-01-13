@@ -35,4 +35,4 @@ private:
     std::filesystem::path path_;
 };
 
-} // namespace arcraven::ugvcore
+} // namespace arcraven::ugv

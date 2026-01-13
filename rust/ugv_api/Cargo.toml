@@ -1,0 +1,11 @@
+[package]
+name = "ugv_api"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+name = "ugv_api"
+path = "src/lib.rs"
+
+[dependencies]
+base64 = "0.21"
